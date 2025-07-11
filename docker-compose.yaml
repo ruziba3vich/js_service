@@ -1,0 +1,26 @@
+services:
+  js-executor:
+    build:
+      context: ./js-executor
+    container_name: js-executor
+    restart: always
+    networks:
+      - js-net
+
+  js-runner-service:
+    build:
+      context: .
+    container_name: js-runner-service
+    restart: on-failure
+    ports:
+      - "704:704"
+    depends_on:
+      - js-executor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - js-net
+
+networks:
+  js-net:
+    driver: bridge
