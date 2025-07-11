@@ -19,7 +19,7 @@ func NewConfig() *Config {
 	_ = godotenv.Load()
 	return &Config{
 		LogPath:             getEnv("LOG_PATH", "app.log"),
-		AppPort:             getEnv("APP_PORT", "703"),
+		AppPort:             getEnv("APP_PORT", "704"),
 		JsContainerName:     getEnv("JS_CONTAINER_NAME", "cpp-executor"),
 		JsExecutableName:    getEnv("JS_EXECUTABLE_NAME", "program"),
 		JsSourceFileName:    getEnv("JS_SOURCE_FILE_NAME", "main.cpp"),
