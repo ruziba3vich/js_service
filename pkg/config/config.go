@@ -20,9 +20,9 @@ func NewConfig() *Config {
 	return &Config{
 		LogPath:             getEnv("LOG_PATH", "app.log"),
 		AppPort:             getEnv("APP_PORT", "704"),
-		JsContainerName:     getEnv("JS_CONTAINER_NAME", "cpp-executor"),
+		JsContainerName:     getEnv("JS_CONTAINER_NAME", "js-executor"),
 		JsExecutableName:    getEnv("JS_EXECUTABLE_NAME", "program"),
-		JsSourceFileName:    getEnv("JS_SOURCE_FILE_NAME", "main.cpp"),
+		JsSourceFileName:    getEnv("JS_SOURCE_FILE_NAME", "main.js"),
 		ContainerWorkingDir: getEnv("CONTAINER_WORKING_DIR", "/app"),
 		CompilationTimeout:  getEnvTime("COMPILATION_TIME_OUT", 15),
 		ExecutionTimeout:    getEnvTime("EXECUTION_TIME_OUT", 60),
