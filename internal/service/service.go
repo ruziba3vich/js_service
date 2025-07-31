@@ -155,7 +155,7 @@ func (s *JsExecutorServer) Execute(stream compiler_service.CodeExecutor_ExecuteS
 		switch payload := req.Payload.(type) {
 		case *compiler_service.ExecuteRequest_Code:
 			s.logger.Info("Received Code payload for JavaScript execution", map[string]any{"session_id": sessionID})
-			if payload.Code.Language != "js" {
+			if payload.Code.Language != "javascript" {
 				s.logger.Warn(fmt.Sprintf("Unsupported language received: %s, expected 'js'", payload.Code.Language),
 					map[string]any{"session_id": sessionID, "language": payload.Code.Language})
 				client.SendResponse(&compiler_service.ExecuteResponse{
