@@ -18,11 +18,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --no-cache -t ghcr.io/ndc-group/tmii-go-api-gateway:latest .
+          docker build --no-cache -t ghcr.io/ruziba3vich/js_service:latest .
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/ndc-group/tmii-go-api-gateway:latest
+          docker push ghcr.io/ruziba3vich/js_service:latest
 
   deploy:
     needs: build
@@ -49,15 +49,15 @@ jobs:
             socker rm tmii-go-api-gateway || true
       
             echo "🗑️ Removing old Docker image..."
-            socker rmi ghcr.io/ndc-group/tmii-go-api-gateway:latest || true
+            socker rmi ghcr.io/ndc-group/ruziba3vich/js_service:latest || true
       
             echo "📥 Pulling latest Docker image..."
-            socker pull ghcr.io/ndc-group/tmii-go-api-gateway:latest
+            socker pull ghcr.io/ndc-group/ruziba3vich/js_service:latest
       
             echo "🔍 Checking for processes on port 8008..."
             sudo fuser -k 8008/tcp || true
       
             echo "🚀 Running new container (hidden Docker socket)..."
-            socker run -d --restart always --name tmii-go-api-gateway -p 8008:8008 ghcr.io/ndc-group/tmii-go-api-gateway:latest
+            socker run -d --restart always --name tmii-go-api-gateway -p 8008:8008 ghcr.io/ruziba3vich/js_service:latest
       
             echo "✅ Deployment Successful!"
