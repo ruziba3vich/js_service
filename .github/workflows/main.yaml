@@ -14,15 +14,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GHCR_TOKEN }}" | socker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
       - name: Build Docker image
         run: |
-          socker build --no-cache -t ghcr.io/ndc-group/tmii-go-api-gateway:latest .
+          docker build --no-cache -t ghcr.io/ndc-group/tmii-go-api-gateway:latest .
 
       - name: Push Docker image
         run: |
-          socker push ghcr.io/ndc-group/tmii-go-api-gateway:latest
+          docker push ghcr.io/ndc-group/tmii-go-api-gateway:latest
 
   deploy:
     needs: build
@@ -32,14 +32,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # - name: Debug SSH Connection
-      #   run: |
-      #     echo "Deploying to host: ${{ secrets.TEST_SSH_HOST }}"
-      #     echo "Deploying as user: ${{ secrets.TEST_SSH_USER }}"
-      #     echo "Checking if SSH port 22 is open..."
-      #     nc -zv ${{ secrets.SSH_HOST }} 22 || echo "SSH port might be blocked!"
-
-      - name: Deploy to Server
+      - name: Deploy to Server (via socker)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -64,8 +57,7 @@ jobs:
             echo "🔍 Checking for processes on port 8008..."
             sudo fuser -k 8008/tcp || true
       
-            echo "🚀 Running new container..."
+            echo "🚀 Running new container (hidden Docker socket)..."
             socker run -d --restart always --name tmii-go-api-gateway -p 8008:8008 ghcr.io/ndc-group/tmii-go-api-gateway:latest
       
             echo "✅ Deployment Successful!"
-  
