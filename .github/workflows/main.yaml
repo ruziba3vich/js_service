@@ -1,4 +1,4 @@
-name: Deploy JS Service
+name: Build and Deploy Backend
 
 on:
   push:
@@ -6,39 +6,66 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up SSH access
-        uses: webfactory/ssh-agent@v0.5.4
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GHCR_TOKEN }}" | socker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          socker build --no-cache -t ghcr.io/ndc-group/tmii-go-api-gateway:latest .
+
+      - name: Push Docker image
+        run: |
+          socker push ghcr.io/ndc-group/tmii-go-api-gateway:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # - name: Debug SSH Connection
+      #   run: |
+      #     echo "Deploying to host: ${{ secrets.TEST_SSH_HOST }}"
+      #     echo "Deploying as user: ${{ secrets.TEST_SSH_USER }}"
+      #     echo "Checking if SSH port 22 is open..."
+      #     nc -zv ${{ secrets.SSH_HOST }} 22 || echo "SSH port might be blocked!"
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Ensure target directory exists on server
-        run: |
-          ssh -T -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /home/${{ secrets.SSH_USER }}/online_compiler/js_service"
-
-      - name: Synchronize files to server with rsync
-        run: |
-          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" --exclude '.git' ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SSH_USER }}/online_compiler/js_service/
-
-      - name: Verify Docker Compose is installed
-        run: |
-          ssh -T -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "docker compose version || { echo 'Docker Compose is not installed'; exit 1; }"
-
-      - name: Deploy with Docker Compose
-        run: |
-          ssh -T -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e
-            echo "Changing directory to logging service..."
-            cd /home/${{ secrets.SSH_USER }}/online_compiler/js_service
-            echo "Running docker compose down..."
-            docker compose down
-            echo "Running docker compose up -d --build..."
-            COMPOSE_BAKE=true docker compose up -d --build
-            echo "Deployment completed successfully!"
-          EOF
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            echo "🔐 Authenticating with GHCR..."
+            echo "${{ secrets.GHCR_TOKEN }}" | socker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            
+            echo "🛑 Stopping old container (if exists)..."
+            socker stop tmii-go-api-gateway || true
+            socker rm tmii-go-api-gateway || true
+      
+            echo "🗑️ Removing old Docker image..."
+            socker rmi ghcr.io/ndc-group/tmii-go-api-gateway:latest || true
+      
+            echo "📥 Pulling latest Docker image..."
+            socker pull ghcr.io/ndc-group/tmii-go-api-gateway:latest
+      
+            echo "🔍 Checking for processes on port 8008..."
+            sudo fuser -k 8008/tcp || true
+      
+            echo "🚀 Running new container..."
+            socker run -d --restart always --name tmii-go-api-gateway -p 8008:8008 ghcr.io/ndc-group/tmii-go-api-gateway:latest
+      
+            echo "✅ Deployment Successful!"
+  
