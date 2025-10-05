@@ -32,7 +32,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Server (via socker)
+      - name: Deploy to Server (via Docker)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -45,19 +45,19 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             
             echo "🛑 Stopping old container (if exists)..."
-            socker stop tmii-go-api-gateway || true
-            socker rm tmii-go-api-gateway || true
+            docker stop tmii-go-api-gateway || true
+            docker rm tmii-go-api-gateway || true
       
             echo "🗑️ Removing old Docker image..."
-            socker rmi ghcr.io/ndc-group/ruziba3vich/js_service:latest || true
+            docker rmi ghcr.io/ruziba3vich/js_service:latest || true
       
             echo "📥 Pulling latest Docker image..."
-            socker pull ghcr.io/ndc-group/ruziba3vich/js_service:latest
+            docker pull ghcr.io/ruziba3vich/js_service:latest
       
-            echo "🔍 Checking for processes on port 8008..."
+            echo "🔍 Checking for processes on port 704..."
             sudo fuser -k 704/tcp || true
       
-            echo "🚀 Running new container (hidden Docker socket)..."
-            socker run -d --restart always --name tmii-go-api-gateway -p 704:704 ghcr.io/ruziba3vich/js_service:latest
+            echo "🚀 Running new container..."
+            docker run -d --restart always --name tmii-go-api-gateway -p 704:704 ghcr.io/ruziba3vich/js_service:latest
       
             echo "✅ Deployment Successful!"
