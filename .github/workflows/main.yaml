@@ -42,7 +42,7 @@ jobs:
           script_stop: true
           script: |
             echo "🔐 Authenticating with GHCR..."
-            echo "${{ secrets.GHCR_TOKEN }}" | socker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             
             echo "🛑 Stopping old container (if exists)..."
             socker stop tmii-go-api-gateway || true
