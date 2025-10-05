@@ -55,9 +55,9 @@ jobs:
             socker pull ghcr.io/ndc-group/ruziba3vich/js_service:latest
       
             echo "🔍 Checking for processes on port 8008..."
-            sudo fuser -k 8008/tcp || true
+            sudo fuser -k 704/tcp || true
       
             echo "🚀 Running new container (hidden Docker socket)..."
-            socker run -d --restart always --name tmii-go-api-gateway -p 8008:8008 ghcr.io/ruziba3vich/js_service:latest
+            socker run -d --restart always --name tmii-go-api-gateway -p 704:704 ghcr.io/ruziba3vich/js_service:latest
       
             echo "✅ Deployment Successful!"
